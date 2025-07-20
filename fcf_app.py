@@ -1,41 +1,49 @@
 import streamlit as st
 import requests
 
-# Set page config
+# Page config
 st.set_page_config(page_title="Caesar's Quick Value Finder", layout="centered")
 
-# Load API credentials from secrets
-api_key = st.secrets["API_KEY"]
-api_url = st.secrets["API_URL"]
+st.title("📈 Caesar's Quick Value Finder")
 
-# UI elements
-st.title("Caesar's Quick Value Finder")
-st.subheader("Estimate a stock's intrinsic value based on FCF and growth")
+# Input fields
+ticker = st.text_input("Enter ticker symbol (e.g., AAPL):", value="AAPL")
+cagr = st.slider("Expected CAGR (%)", min_value=0, max_value=30, value=5)
 
-ticker = st.text_input("Enter Ticker Symbol", value="AAPL")
-cagr = st.slider("Expected CAGR (%)", 0.0, 20.0, 5.0)
-
-if st.button("Calculate Valuation"):
-    with st.spinner("Fetching data and calculating..."):
+if st.button("Calculate DCF Valuation"):
+    if not ticker:
+        st.warning("Please enter a ticker symbol.")
+    else:
+        # Load API settings
         try:
-            response = requests.get(
-                f"{api_url}/calculate",
-                params={"ticker": ticker, "cagr": cagr},
-                headers={"x-api-key": api_key}
-            )
-            response.raise_for_status()
-            data = response.json()
+            api_url = st.secrets["API_URL"]
+            api_key = st.secrets["API_KEY"]
+        except KeyError as e:
+            st.error(f"Missing secret: {e}")
+            st.stop()
 
-            st.success(f"DCF Value per Share: ${data['dcf_per_share']}")
-            st.metric("FCF Per Share", f"${data['fcf_per_share']}")
-            st.metric("FCF (Latest Year)", f"${data['fcf']}")
+        # Prepare request
+        params = {"ticker": ticker, "cagr": cagr}
+        headers = {"x-api-key": api_key}
 
-            st.subheader("Projected Free Cash Flow")
-            st.line_chart(data["projected_fcf"])
+        try:
+            response = requests.get(api_url, headers=headers, params=params)
+            st.write("Status code:", response.status_code)  # Debug
+            st.write("Raw response:", response.text)        # Debug
 
-        except requests.exceptions.HTTPError as http_err:
-            st.error(f"API error: {response.status_code} - {response.text}")
-        except requests.exceptions.RequestException as req_err:
-            st.error(f"Connection error: {req_err}")
-        except Exception as e:
-            st.error(f"Unexpected error: {e}")
+            if response.status_code == 200:
+                data = response.json()
+
+                st.success("Valuation calculated successfully!")
+                st.metric("Free Cash Flow (FCF)", f"${data['fcf']:,}")
+                st.metric("FCF per Share", f"${data['fcf_per_share']:.2f}")
+                st.metric("DCF per Share", f"${data['dcf_per_share']:.2f}")
+
+                st.subheader("Projected FCF (Next 10 Years)")
+                st.line_chart(data['projected_fcf'])
+
+            else:
+                st.error(f"Error {response.status_code}: {response.text}")
+
+        except requests.exceptions.RequestException as e:
+            st.error(f"Connection error: {e}")
