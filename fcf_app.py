@@ -1,27 +1,41 @@
 import streamlit as st
 import requests
 
+# Set page config
 st.set_page_config(page_title="Caesar's Quick Value Finder", layout="centered")
 
-st.title("🧠 Caesar's Quick Value Finder")
+# Load API credentials from secrets
+api_key = st.secrets["API_KEY"]
+api_url = st.secrets["API_URL"]
 
-ticker = st.text_input("Enter Stock Ticker (e.g. AAPL)", value="AAPL")
-cagr = st.number_input("Enter FCF Growth Rate (%)", min_value=0.0, max_value=50.0, value=5.0)
-api_key = st.secrets.get("API_KEY", "your-secret-api-key")  # Store API key safely
+# UI elements
+st.title("Caesar's Quick Value Finder")
+st.subheader("Estimate a stock's intrinsic value based on FCF and growth")
 
-if st.button("Get Valuation"):
-    try:
-        res = requests.get(
-            "http://127.0.0.1:8000/calculate",
-            params={"ticker": ticker, "cagr": cagr},
-            headers={"x-api-key": api_key}
-        )
-        if res.status_code == 200:
-            data = res.json()
-            st.success(f"✅ FCF: ${data['fcf']:,.0f}")
-            st.success(f"📌 FCF per Share: ${data['fcf_per_share']:.2f}")
-            st.success(f"💰 Caesar's Value: ${data['dcf_per_share']:.2f}")
-        else:
-            st.error(f"❌ Error: {res.status_code} - {res.text}")
-    except Exception as e:
-        st.error(f"❌ Request failed: {e}")
+ticker = st.text_input("Enter Ticker Symbol", value="AAPL")
+cagr = st.slider("Expected CAGR (%)", 0.0, 20.0, 5.0)
+
+if st.button("Calculate Valuation"):
+    with st.spinner("Fetching data and calculating..."):
+        try:
+            response = requests.get(
+                f"{api_url}/calculate",
+                params={"ticker": ticker, "cagr": cagr},
+                headers={"x-api-key": api_key}
+            )
+            response.raise_for_status()
+            data = response.json()
+
+            st.success(f"DCF Value per Share: ${data['dcf_per_share']}")
+            st.metric("FCF Per Share", f"${data['fcf_per_share']}")
+            st.metric("FCF (Latest Year)", f"${data['fcf']}")
+
+            st.subheader("Projected Free Cash Flow")
+            st.line_chart(data["projected_fcf"])
+
+        except requests.exceptions.HTTPError as http_err:
+            st.error(f"API error: {response.status_code} - {response.text}")
+        except requests.exceptions.RequestException as req_err:
+            st.error(f"Connection error: {req_err}")
+        except Exception as e:
+            st.error(f"Unexpected error: {e}")
