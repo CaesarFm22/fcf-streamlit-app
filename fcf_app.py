@@ -1,36 +1,36 @@
 import streamlit as st
 import requests
+import os
 
-st.set_page_config(page_title="Caesar's Quick Value Finder", layout="centered")
+# BACKEND URL (change to your actual deployed FastAPI URL)
+API_URL = "https://render-om30.onrender.com/calculate"
 
-st.title("📊 Caesar's Quick Value Finder")
+# Store the API key securely in Streamlit Secrets or directly here for testing
+API_KEY = st.secrets["API_KEY"] if "API_KEY" in st.secrets else os.getenv("API_KEY")
 
-ticker = st.text_input("Enter a stock ticker (e.g., AAPL, MSFT)")
-cagr = st.slider("Expected CAGR (%)", min_value=0, max_value=20, value=5)
+st.set_page_config(page_title="Valuation Calculator", layout="centered")
 
-if "API_KEY" not in st.secrets:
-    st.error("API key not found in secrets. Add it to `.streamlit/secrets.toml`.")
-    st.stop()
+st.title("📈 Stock Valuation Estimator")
 
-api_key = st.secrets["API_KEY"]
-api_url = "http://127.0.0.1:8000/calculate"  # Replace with your deployed backend if hosted remotely
+# Input fields
+ticker = st.text_input("Enter Stock Ticker", value="AAPL")
+cagr = st.number_input("Enter CAGR (%)", min_value=0.0, step=0.1, value=5.0)
 
+# Submit button
 if st.button("Calculate Valuation"):
-    if not ticker:
-        st.warning("Please enter a valid ticker.")
+    if not API_KEY:
+        st.error("API key not found. Please configure it in Streamlit secrets or environment.")
     else:
         try:
-            headers = {"X-API-Key": api_key}
-            params = {"ticker": ticker, "cagr": cagr}
-            response = requests.get(api_url, params=params, headers=headers)
-
+            response = requests.get(
+                API_URL,
+                params={"ticker": ticker, "cagr": cagr},
+                headers={"x-api-key": API_KEY}
+            )
             if response.status_code == 200:
-                data = response.json()
-                st.success(f"Valuation for {ticker.upper()}")
-                st.metric("FCF per Share", f"${data['fcf_per_share']:.2f}")
-                st.metric("DCF per Share", f"${data['dcf_per_share']:.2f}")
-                st.line_chart(data["projected_fcf"], height=300)
+                result = response.json()
+                st.success(f"✅ {result['valuation']}")
             else:
-                st.error(f"Error {response.status_code}: {response.text}")
-        except requests.exceptions.RequestException as e:
-            st.error(f"Connection error: {e}")
+                st.error(f"❌ Error: {response.status_code} - {response.json().get('detail', 'Unknown error')}")
+        except Exception as e:
+            st.error(f"⚠️ Request failed: {e}")
