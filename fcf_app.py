@@ -1,27 +1,67 @@
-import fcf_app as st
-import requests
+import streamlit as st
+import yfinance as yf
+import pandas as pd
 
-st.set_page_config(page_title="Caesar's Quick Value Finder", layout="centered")
-
-st.title("🧠 Caesar's Quick Value Finder")
-
-ticker = st.text_input("Enter Stock Ticker (e.g. AAPL)", value="AAPL")
-cagr = st.number_input("Enter FCF Growth Rate (%)", min_value=0.0, max_value=50.0, value=5.0)
-api_key = st.secrets.get("API_KEY", "your-secret-api-key")  # Store API key safely
-
-if st.button("Get Valuation"):
+# Function to calculate intrinsic value using Free Cash Flow to Firm (FCFF) method
+def calculate_intrinsic_value(ticker: str, cagr: float):
     try:
-        res = requests.get(
-            "http://127.0.0.1:8000/calculate",
-            params={"ticker": ticker, "cagr": cagr},
-            headers={"x-api-key": api_key}
-        )
-        if res.status_code == 200:
-            data = res.json()
-            st.success(f"✅ FCF: ${data['fcf']:,.0f}")
-            st.success(f"📌 FCF per Share: ${data['fcf_per_share']:.2f}")
-            st.success(f"💰 Caesar's Value: ${data['dcf_per_share']:.2f}")
-        else:
-            st.error(f"❌ Error: {res.status_code} - {res.text}")
+        ticker = ticker.upper()
+        stock = yf.Ticker(ticker)
+        cashflow = stock.cashflow
+
+        if cashflow.empty:
+            st.error("Cashflow data is empty.")
+            return None
+
+        # Attempt to find appropriate row labels for OCF and CapEx
+        ocf_row = next((label for label in cashflow.index if 'Operating Cash Flow' in label or 'Total Cash From Operating Activities' in label), None)
+        capex_row = next((label for label in cashflow.index if 'Capital Expenditure' in label), None)
+
+        if not ocf_row or not capex_row:
+            st.error("Could not find required fields in cashflow.")
+            return None
+
+        ocf = cashflow.loc[ocf_row]
+        capex = cashflow.loc[capex_row]
+
+        fcf = ocf - capex
+        fcf = fcf[fcf.notnull()].astype(float)
+
+        if fcf.empty:
+            st.error("Free Cash Flow data is not available.")
+            return None
+
+        avg_fcf = fcf.mean()
+
+        discount_rate = 0.10
+        years = 5
+
+        # Project future FCFs and calculate terminal value
+        projected_fcfs = [avg_fcf * ((1 + cagr/100) ** i) for i in range(1, years + 1)]
+        terminal_value = projected_fcfs[-1] * (1 + cagr/100) / (discount_rate - cagr/100)
+
+        # Discount FCFs and terminal value to present value
+        discounted_fcfs = [fcf / ((1 + discount_rate) ** i) for i, fcf in enumerate(projected_fcfs, start=1)]
+        discounted_terminal = terminal_value / ((1 + discount_rate) ** years)
+
+        intrinsic_value = sum(discounted_fcfs) + discounted_terminal
+        return intrinsic_value
+
     except Exception as e:
-        st.error(f"❌ Request failed: {e}")
+        st.error(f"Exception occurred: {e}")
+        return None
+
+# Streamlit frontend
+st.title("📊 Free Cash Flow Valuation Tool")
+st.write("Estimate the intrinsic value of a stock using its Free Cash Flow (FCF).")
+
+ticker = st.text_input("Enter Stock Ticker (e.g., AAPL):")
+cagr = st.slider("Expected CAGR (%):", min_value=1.0, max_value=20.0, value=10.0, step=0.5)
+
+if st.button("Calculate Valuation"):
+    if not ticker:
+        st.warning("Please enter a stock ticker.")
+    else:
+        valuation = calculate_intrinsic_value(ticker, cagr)
+        if valuation:
+            st.success(f"✅ Intrinsic Value Estimate: ${valuation:,.2f}")
