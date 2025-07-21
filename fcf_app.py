@@ -1,34 +1,27 @@
-import streamlit as st
+import fcf_app as st
 import requests
 
-# Configuration
-API_URL = "https://render-om30.onrender.com/calculate"
-API_KEY = "barakliliyasha!@"
+st.set_page_config(page_title="Caesar's Quick Value Finder", layout="centered")
 
-st.set_page_config(page_title="FCF Valuation App")
-st.title("📈 Free Cash Flow Valuation")
+st.title("🧠 Caesar's Quick Value Finder")
 
-# User Inputs
-ticker = st.text_input("Enter Ticker Symbol", value="AAPL")
-cagr = st.slider("Select CAGR (%)", min_value=0, max_value=30, value=10)
+ticker = st.text_input("Enter Stock Ticker (e.g. AAPL)", value="AAPL")
+cagr = st.number_input("Enter FCF Growth Rate (%)", min_value=0.0, max_value=50.0, value=5.0)
+api_key = st.secrets.get("API_KEY", "your-secret-api-key")  # Store API key safely
 
-# Button
-if st.button("Calculate Valuation"):
+if st.button("Get Valuation"):
     try:
-        # Make GET request to FastAPI with API Key in headers
-        response = requests.get(
-            API_URL,
+        res = requests.get(
+            "http://127.0.0.1:8000/calculate",
             params={"ticker": ticker, "cagr": cagr},
-            headers={"x-api-key": API_KEY}
+            headers={"x-api-key": api_key}
         )
-
-        if response.status_code == 200:
-            valuation = response.json().get("valuation")
-            st.success(f"✅ {valuation}")
-        elif response.status_code == 403:
-            st.error("❌ Error 403: Invalid API Key")
+        if res.status_code == 200:
+            data = res.json()
+            st.success(f"✅ FCF: ${data['fcf']:,.0f}")
+            st.success(f"📌 FCF per Share: ${data['fcf_per_share']:.2f}")
+            st.success(f"💰 Caesar's Value: ${data['dcf_per_share']:.2f}")
         else:
-            st.error(f"❌ Error {response.status_code}: {response.text}")
-
-    except requests.exceptions.RequestException as e:
-        st.error(f"Connection error: {e}")
+            st.error(f"❌ Error: {res.status_code} - {res.text}")
+    except Exception as e:
+        st.error(f"❌ Request failed: {e}")
