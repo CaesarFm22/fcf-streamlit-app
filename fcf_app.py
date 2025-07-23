@@ -72,6 +72,11 @@ if ticker:
         dividends_per_share = info.get("dividendRate", 0)
         treasury = balance_sheet.loc["Treasury Stock"].iloc[0] if "Treasury Stock" in balance_sheet.index else 0
         market_cap = price * shares_outstanding
+        book_value = info.get("bookValue", 0)
+        roa = info.get("returnOnAssets", 0)
+        roe = info.get("returnOnEquity", 0)
+        current_ratio = info.get("currentRatio", 0)
+        quick_ratio = info.get("quickRatio", 0)
 
         # Corrected FCF / Owner Earnings logic using Net Income instead of Operating Cash Flow
         adjusted_cost = ddna if abs(ddna) > abs(capex) else capex
@@ -94,17 +99,20 @@ if ticker:
             valuation_color = "yellow"
 
         # Display results
-        df = pd.DataFrame(index=["Price", "Market Cap", "Caesar's Value", "Value/Share", "Margin of Safety", "Dividends/share", "Treasury"])
-        df["Metric"] = [
-            f"${price:,.2f}",
-            f"${market_cap:,.0f}",
-            f"${intrinsic_value:,.0f}",
-            f"${caesar_value:,.2f}",
-            f"${margin:,.2f}",
-            f"${dividends_per_share:,.2f}" if dividends_per_share > 0 else "$0.00",
-            f"${treasury:,.0f}" if treasury != 0 else "$0"
-        ]
-        st.table(df[["Metric"]])
+        data = {
+            "Metric": [
+                "Price", "Market Cap", "Caesar's Value", "Value/Share", "Margin of Safety",
+                "Dividends/share", "Treasury", "Book Value", "ROA", "ROE", "Current Ratio", "Quick Ratio"
+            ],
+            "Value": [
+                f"${price:,.2f}", f"${market_cap:,.0f}", f"${intrinsic_value:,.0f}", f"${caesar_value:,.2f}", f"${margin:,.2f}",
+                f"${dividends_per_share:,.2f}" if dividends_per_share > 0 else "$0.00",
+                f"${treasury:,.0f}" if treasury != 0 else "$0",
+                f"${book_value:,.2f}", f"{roa:.2%}", f"{roe:.2%}", f"{current_ratio:.2f}", f"{quick_ratio:.2f}"
+            ]
+        }
+        df = pd.DataFrame(data)
+        st.table(df)
 
         # Display Caesar's conclusion
         st.markdown(f"""
