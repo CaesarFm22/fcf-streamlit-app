@@ -16,6 +16,10 @@ st.markdown("""
             background-color: white !important;
             color: black !important;
         }
+        .stTable thead tr th {
+            background-color: white !important;
+            color: black !important;
+        }
         .stTitle h1, .stTitle h2, .stTitle h3 {
             color: white !important;
         }
@@ -90,18 +94,17 @@ if ticker:
             valuation_color = "yellow"
 
         # Display results
-        df = pd.DataFrame({
-            "Metric": ["Price", "Market Cap", "Caesar's Value", "Margin of Safety", "Dividends/share", "Treasury"],
-            "Value": [
-                f"${price:,.2f}",
-                f"${market_cap:,.0f}",
-                f"${caesar_value:,.2f}",
-                f"${margin:,.2f}",
-                f"${dividends_per_share:,.2f}" if dividends_per_share > 0 else "$0.00",
-                f"${treasury:,.0f}" if treasury != 0 else "$0"
-            ]
-        })
-        st.table(df)
+        df = pd.DataFrame(index=["Price", "Market Cap", "Caesar's Value", "Value/Share", "Margin of Safety", "Dividends/share", "Treasury"])
+        df["Metric"] = [
+            f"${price:,.2f}",
+            f"${market_cap:,.0f}",
+            f"${intrinsic_value:,.0f}",
+            f"${caesar_value:,.2f}",
+            f"${margin:,.2f}",
+            f"${dividends_per_share:,.2f}" if dividends_per_share > 0 else "$0.00",
+            f"${treasury:,.0f}" if treasury != 0 else "$0"
+        ]
+        st.table(df[["Metric"]])
 
         # Display Caesar's conclusion
         st.markdown(f"""
