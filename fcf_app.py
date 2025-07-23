@@ -109,28 +109,29 @@ if ticker:
             valuation_label = "fairly valued"
             valuation_color = "yellow"
 
-        # Display results
-        metrics = [
-            ["Price"],
-            ["Market Cap"],
-            ["Caesar's Value"],
-            ["Caesar's Value/Share"],
-            ["Market Share"],
-            ["Margin of Safety"],
-            ["Dividends/share"],
-            ["Treasury"],
-            ["Book Value"],
-            ["ROA"],
-            ["ROE"],
-            ["Current Ratio"],
-            ["Quick Ratio"],
-            ["Cash to Debt"],
-            ["Debt to Equity"],
-            ["SGR"]
-        ]
+        # Build the metric list manually
+        metrics = pd.DataFrame({
+            "Metric": [
+                "Price",
+                "Market Cap",
+                "Caesar's Value",
+                "Caesar's Value/Share",
+                "Market Share",
+                "Margin of Safety",
+                "Dividends/share",
+                "Treasury",
+                "Book Value",
+                "ROA",
+                "ROE",
+                "Current Ratio",
+                "Quick Ratio",
+                "Cash to Debt",
+                "Debt to Equity",
+                "SGR"
+            ]
+        })
 
-        df = pd.DataFrame(metrics, columns=["Metric"])
-        st.table(df)
+        st.table(metrics)
 
         # Display Caesar's conclusion
         st.markdown(f"""
