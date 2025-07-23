@@ -28,7 +28,13 @@ if ticker:
     try:
         # Extract key values
         net_income = financials.loc["Net Income"].iloc[0]
-        capex = cashflow.loc["Capital Expenditures"].iloc[0]
+
+        capex = 0
+        for label in ["Capital Expenditures", "CapitalExpenditures"]:
+            if label in cashflow.index:
+                capex = cashflow.loc[label].iloc[0]
+                break
+
         ddna = financials.loc["Depreciation"].iloc[0]
         shares_outstanding = info.get("sharesOutstanding", 0)
         price = info.get("currentPrice", 0)
