@@ -19,6 +19,9 @@ st.markdown("""
         .stTitle h1, .stTitle h2, .stTitle h3 {
             color: white !important;
         }
+        h1 {
+            color: white !important;
+        }
     </style>
 """, unsafe_allow_html=True)
 
