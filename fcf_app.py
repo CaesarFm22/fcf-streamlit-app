@@ -12,6 +12,10 @@ st.markdown("""
         label, .stTextInput>div>input, .stNumberInput>div>input, .stNumberInput label, .stTextInput label, .stTitle, .stMarkdown {
             color: white !important;
         }
+        .stTable tbody tr td {
+            background-color: white !important;
+            color: black !important;
+        }
     </style>
 """, unsafe_allow_html=True)
 
