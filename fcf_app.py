@@ -9,12 +9,15 @@ st.markdown("""
         body, .stApp {
             background-color: #1e1e1e;
         }
-        label, .stTextInput>div>input, .stNumberInput>div>input, .stNumberInput label, .stTextInput label, .stTitle, .stMarkdown {
+        label, .stTextInput>div>input, .stNumberInput>div>input, .stNumberInput label, .stTextInput label, .stMarkdown {
             color: white !important;
         }
         .stTable tbody tr td {
             background-color: white !important;
             color: black !important;
+        }
+        .stTitle h1 {
+            color: white !important;
         }
     </style>
 """, unsafe_allow_html=True)
