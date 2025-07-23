@@ -3,6 +3,15 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 
+# Set dark-friendly background color
+st.markdown("""
+    <style>
+        body, .stApp {
+            background-color: #1e1e1e;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 # Display logo and YouTube icon with link
 st.markdown("""
 <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
