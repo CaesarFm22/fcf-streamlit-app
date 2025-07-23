@@ -111,12 +111,10 @@ if ticker:
 
         # Display results
         metrics = [
-            ["Price", f"${price:,.2f}"],
-            ["Market Cap", f"${market_cap:,.0f}"],
             ["Caesar's Value", f"${intrinsic_value:,.0f}"],
-            ["Caesar's Value/Share", f"${caesar_value:,.2f}"],
             ["Price", f"${price:,.2f}"],
-            ["Market Share", f"${market_cap:,.0f}"],
+            ["Caesar's Value/Share", f"${caesar_value:,.2f}"],
+            ["Market Cap", f"${market_cap:,.0f}"],
             ["Margin of Safety", f"${margin:,.2f}"],
             ["Dividends/share", f"${dividends_per_share:,.2f}" if dividends_per_share > 0 else "$0.00"],
             ["Treasury", f"${treasury:,.0f}" if treasury != 0 else "$0"],
