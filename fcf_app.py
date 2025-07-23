@@ -99,19 +99,22 @@ if ticker:
             valuation_color = "yellow"
 
         # Display results
-        data = {
-            "Metric": [
-                "Price", "Market Cap", "Caesar's Value", "Value/Share", "Margin of Safety",
-                "Dividends/share", "Treasury", "Book Value", "ROA", "ROE", "Current Ratio", "Quick Ratio"
-            ],
-            "Value": [
-                f"${price:,.2f}", f"${market_cap:,.0f}", f"${intrinsic_value:,.0f}", f"${caesar_value:,.2f}", f"${margin:,.2f}",
-                f"${dividends_per_share:,.2f}" if dividends_per_share > 0 else "$0.00",
-                f"${treasury:,.0f}" if treasury != 0 else "$0",
-                f"${book_value:,.2f}", f"{roa:.2%}", f"{roe:.2%}", f"{current_ratio:.2f}", f"{quick_ratio:.2f}"
-            ]
-        }
-        df = pd.DataFrame(data)
+        metrics = [
+            ["Price", f"${price:,.2f}"],
+            ["Market Cap", f"${market_cap:,.0f}"],
+            ["Caesar's Value", f"${intrinsic_value:,.0f}"],
+            ["Value/Share", f"${caesar_value:,.2f}"],
+            ["Margin of Safety", f"${margin:,.2f}"],
+            ["Dividends/share", f"${dividends_per_share:,.2f}" if dividends_per_share > 0 else "$0.00"],
+            ["Treasury", f"${treasury:,.0f}" if treasury != 0 else "$0"],
+            ["Book Value", f"${book_value:,.2f}"],
+            ["ROA", f"{roa:.2%}"],
+            ["ROE", f"{roe:.2%}"],
+            ["Current Ratio", f"{current_ratio:.2f}"],
+            ["Quick Ratio", f"{quick_ratio:.2f}"]
+        ]
+
+        df = pd.DataFrame(metrics, columns=["Metric", "Value"])
         st.table(df)
 
         # Display Caesar's conclusion
