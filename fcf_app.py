@@ -35,7 +35,12 @@ if ticker:
                 capex = cashflow.loc[label].iloc[0]
                 break
 
-        ddna = financials.loc["Depreciation"].iloc[0]
+        ddna = 0
+        for label in ["Depreciation", "Depreciation & Amortization", "Depreciation And Amortization"]:
+            if label in financials.index:
+                ddna = financials.loc[label].iloc[0]
+                break
+
         shares_outstanding = info.get("sharesOutstanding", 0)
         price = info.get("currentPrice", 0)
         dividends_per_share = info.get("dividendRate", 0)
