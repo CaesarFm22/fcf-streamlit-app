@@ -111,24 +111,25 @@ if ticker:
 
         # Display results
         metrics = [
-            ["Caesar's Value", f"${intrinsic_value:,.0f}"],
-            ["Price", f"${price:,.2f}"],
-            ["Caesar's Value/Share", f"${caesar_value:,.2f}"],
-            ["Market Cap", f"${market_cap:,.0f}"],
-            ["Margin of Safety", f"${margin:,.2f}"],
-            ["Dividends/share", f"${dividends_per_share:,.2f}" if dividends_per_share > 0 else "$0.00"],
-            ["Treasury", f"${treasury:,.0f}" if treasury != 0 else "$0"],
-            ["Book Value", f"${book_value:,.2f}"],
-            ["ROA", f"{roa:.2%}"],
-            ["ROE", f"{roe:.2%}"],
-            ["Current Ratio", f"{current_ratio:.2f}"],
-            ["Quick Ratio", f"{quick_ratio:.2f}"],
-            ["Cash to Debt", f"{cash_to_debt:.2f}"],
-            ["Debt to Equity", f"{debt_to_equity:.2f}"],
-            ["SGR", f"{sgr:.2%}"]
+            ["Price"],
+            ["Market Cap"],
+            ["Caesar's Value"],
+            ["Caesar's Value/Share"],
+            ["Market Share"],
+            ["Margin of Safety"],
+            ["Dividends/share"],
+            ["Treasury"],
+            ["Book Value"],
+            ["ROA"],
+            ["ROE"],
+            ["Current Ratio"],
+            ["Quick Ratio"],
+            ["Cash to Debt"],
+            ["Debt to Equity"],
+            ["SGR"]
         ]
 
-        df = pd.DataFrame(metrics, columns=["Metric", "Value"])
+        df = pd.DataFrame(metrics, columns=["Metric"])
         st.table(df)
 
         # Display Caesar's conclusion
