@@ -16,7 +16,7 @@ st.markdown("""
             background-color: white !important;
             color: black !important;
         }
-        .stTitle h1 {
+        .stTitle h1, .stTitle h2, .stTitle h3 {
             color: white !important;
         }
     </style>
@@ -67,7 +67,7 @@ if ticker:
         market_cap = price * shares_outstanding
 
         # Corrected FCF / Owner Earnings logic using Net Income instead of Operating Cash Flow
-        adjusted_cost = capex if abs(capex) > abs(ddna) else ddna
+        adjusted_cost = ddna if abs(ddna) > abs(capex) else capex
         fcf = net_income - adjusted_cost
 
         cagr = cagr_input / 100
