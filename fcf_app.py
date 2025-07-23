@@ -73,10 +73,21 @@ if ticker:
         treasury = balance_sheet.loc["Treasury Stock"].iloc[0] if "Treasury Stock" in balance_sheet.index else 0
         market_cap = price * shares_outstanding
         book_value = info.get("bookValue", 0)
+
+        # Ratios
         roa = info.get("returnOnAssets", 0)
         roe = info.get("returnOnEquity", 0)
         current_ratio = info.get("currentRatio", 0)
         quick_ratio = info.get("quickRatio", 0)
+
+        total_cash = balance_sheet.loc["Cash"].iloc[0] if "Cash" in balance_sheet.index else 0
+        total_debt = balance_sheet.loc["Total Debt"].iloc[0] if "Total Debt" in balance_sheet.index else 0
+        total_equity = balance_sheet.loc["Total Stockholder Equity"].iloc[0] if "Total Stockholder Equity" in balance_sheet.index else 0
+
+        cash_to_debt = total_cash / total_debt if total_debt != 0 else 0
+        debt_to_equity = total_debt / total_equity if total_equity != 0 else 0
+
+        sgr = roe * (1 - (dividends_per_share / (net_income / shares_outstanding))) if shares_outstanding != 0 else 0
 
         # Corrected FCF / Owner Earnings logic using Net Income instead of Operating Cash Flow
         adjusted_cost = ddna if abs(ddna) > abs(capex) else capex
@@ -103,7 +114,9 @@ if ticker:
             ["Price", f"${price:,.2f}"],
             ["Market Cap", f"${market_cap:,.0f}"],
             ["Caesar's Value", f"${intrinsic_value:,.0f}"],
-            ["Value/Share", f"${caesar_value:,.2f}"],
+            ["Caesar's Value/Share", f"${caesar_value:,.2f}"],
+            ["Price", f"${price:,.2f}"],
+            ["Market Share", f"${market_cap:,.0f}"],
             ["Margin of Safety", f"${margin:,.2f}"],
             ["Dividends/share", f"${dividends_per_share:,.2f}" if dividends_per_share > 0 else "$0.00"],
             ["Treasury", f"${treasury:,.0f}" if treasury != 0 else "$0"],
@@ -111,7 +124,10 @@ if ticker:
             ["ROA", f"{roa:.2%}"],
             ["ROE", f"{roe:.2%}"],
             ["Current Ratio", f"{current_ratio:.2f}"],
-            ["Quick Ratio", f"{quick_ratio:.2f}"]
+            ["Quick Ratio", f"{quick_ratio:.2f}"],
+            ["Cash to Debt", f"{cash_to_debt:.2f}"],
+            ["Debt to Equity", f"{debt_to_equity:.2f}"],
+            ["SGR", f"{sgr:.2%}"]
         ]
 
         df = pd.DataFrame(metrics, columns=["Metric", "Value"])
