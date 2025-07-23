@@ -1,67 +1,80 @@
 import streamlit as st
 import yfinance as yf
 import pandas as pd
+import numpy as np
 
-# Function to calculate intrinsic value using Free Cash Flow to Firm (FCFF) method
-def calculate_intrinsic_value(ticker: str, cagr: float):
+# Display logo and YouTube icon with link
+st.markdown("""
+<div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+    <a href="https://www.youtube.com/@CaesarFM-h9z" target="_blank" style="display: flex; align-items: center; gap: 12px;">
+        <img src="https://github.com/CaesarFm22/fcf-app2.0/blob/main/ChatGPT%20Image%20Jul%2010,%202025,%2006_34_37%20PM.png?raw=true" width="100" alt="Logo">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/e/ef/Youtube_logo.png" width="60" alt="YouTube">
+    </a>
+</div>
+""", unsafe_allow_html=True)
+
+# App input and layout
+st.title("Caesar's Stock Valuation App")
+ticker = st.text_input("Enter Stock Ticker (e.g. AAPL, MSFT):", "AAPL")
+cagr_input = st.number_input("Expected CAGR (%):", min_value=0.0, max_value=50.0, value=10.0)
+
+if ticker:
+    stock = yf.Ticker(ticker)
+    info = stock.info
+    cashflow = stock.cashflow
+    financials = stock.financials
+    balance_sheet = stock.balance_sheet
+
     try:
-        ticker = ticker.upper()
-        stock = yf.Ticker(ticker)
-        cashflow = stock.cashflow
+        # Extract key values
+        net_income = financials.loc["Net Income"].iloc[0]
+        capex = cashflow.loc["Capital Expenditures"].iloc[0]
+        ddna = financials.loc["Depreciation"].iloc[0]
+        shares_outstanding = info.get("sharesOutstanding", 0)
+        price = info.get("currentPrice", 0)
+        dividends_per_share = info.get("dividendRate", 0)
+        treasury = balance_sheet.loc["Treasury Stock"].iloc[0] if "Treasury Stock" in balance_sheet.index else 0
+        market_cap = price * shares_outstanding
 
-        if cashflow.empty:
-            st.error("Cashflow data is empty.")
-            return None
+        # Corrected FCF / Owner Earnings logic using Net Income instead of Operating Cash Flow
+        adjusted_cost = capex if abs(capex) > abs(ddna) else ddna
+        fcf = net_income - adjusted_cost
 
-        # Attempt to find appropriate row labels for OCF and CapEx
-        ocf_row = next((label for label in cashflow.index if 'Operating Cash Flow' in label or 'Total Cash From Operating Activities' in label), None)
-        capex_row = next((label for label in cashflow.index if 'Capital Expenditure' in label), None)
+        cagr = cagr_input / 100
+        intrinsic_value = fcf * (1 + cagr)**10
+        caesar_value = intrinsic_value / shares_outstanding
 
-        if not ocf_row or not capex_row:
-            st.error("Could not find required fields in cashflow.")
-            return None
+        # Determine valuation
+        margin = 0.10 * caesar_value
+        if price > caesar_value + margin:
+            valuation_label = "overvalued"
+            valuation_color = "red"
+        elif price < caesar_value - margin:
+            valuation_label = "undervalued"
+            valuation_color = "green"
+        else:
+            valuation_label = "fairly valued"
+            valuation_color = "yellow"
 
-        ocf = cashflow.loc[ocf_row]
-        capex = cashflow.loc[capex_row]
+        # Display results
+        df = pd.DataFrame({
+            "Metric": ["Price", "Market Cap", "Caesar's Value", "Margin of Safety", "Dividends/share", "Treasury"],
+            "Value": [
+                f"${price:,.2f}",
+                f"${market_cap:,.0f}",
+                f"${caesar_value:,.2f}",
+                f"${margin:,.2f}",
+                f"${dividends_per_share:,.2f}" if dividends_per_share > 0 else "$0.00",
+                f"${treasury:,.0f}" if treasury != 0 else "$0"
+            ]
+        })
+        st.table(df)
 
-        fcf = ocf - capex
-        fcf = fcf[fcf.notnull()].astype(float)
-
-        if fcf.empty:
-            st.error("Free Cash Flow data is not available.")
-            return None
-
-        avg_fcf = fcf.mean()
-
-        discount_rate = 0.10
-        years = 5
-
-        # Project future FCFs and calculate terminal value
-        projected_fcfs = [avg_fcf * ((1 + cagr/100) ** i) for i in range(1, years + 1)]
-        terminal_value = projected_fcfs[-1] * (1 + cagr/100) / (discount_rate - cagr/100)
-
-        # Discount FCFs and terminal value to present value
-        discounted_fcfs = [fcf / ((1 + discount_rate) ** i) for i, fcf in enumerate(projected_fcfs, start=1)]
-        discounted_terminal = terminal_value / ((1 + discount_rate) ** years)
-
-        intrinsic_value = sum(discounted_fcfs) + discounted_terminal
-        return intrinsic_value
+        # Display Caesar's conclusion
+        st.markdown(f"""
+        <h3 style='text-align: center; color: black;'>According to Caesar, this stock is 
+            <span style='color: {valuation_color};'>{valuation_label}</span>.</h3>
+        """, unsafe_allow_html=True)
 
     except Exception as e:
-        st.error(f"Exception occurred: {e}")
-        return None
-
-# Streamlit frontend
-st.title("📊 Free Cash Flow Valuation Tool")
-st.write("Estimate the intrinsic value of a stock using its Free Cash Flow (FCF).")
-
-ticker = st.text_input("Enter Stock Ticker (e.g., AAPL):")
-cagr = st.slider("Expected CAGR (%):", min_value=1.0, max_value=20.0, value=10.0, step=0.5)
-
-if st.button("Calculate Valuation"):
-    if not ticker:
-        st.warning("Please enter a stock ticker.")
-    else:
-        valuation = calculate_intrinsic_value(ticker, cagr)
-        if valuation:
-            st.success(f"✅ Intrinsic Value Estimate: ${valuation:,.2f}")
+        st.error(f"Error fetching data for {ticker}: {e}")
