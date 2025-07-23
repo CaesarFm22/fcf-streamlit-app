@@ -9,6 +9,9 @@ st.markdown("""
         body, .stApp {
             background-color: #1e1e1e;
         }
+        label, .stTextInput>div>input, .stNumberInput>div>input, .stNumberInput label, .stTextInput label, .stTitle, .stMarkdown {
+            color: white !important;
+        }
     </style>
 """, unsafe_allow_html=True)
 
