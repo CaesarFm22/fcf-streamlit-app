@@ -81,8 +81,8 @@ def calculate_intrinsic_value(ticker, cagr):
             row_str = str(row).lower()
             if 'capital expend' in row_str and capex is None:
                 capex = float(cashflow.loc[row].dropna().values[0])
-            elif any(term in row_str for term in ['depreciation', 'amortization', 'depletion']):
-                ddna = (ddna or 0) + float(cashflow.loc[row].dropna().values[0])
+            elif ddna is None and ('depreciation and amortization' in row_str or 'dep&amor' in row_str):
+                ddna = float(cashflow.loc[row].dropna().values[0])
             elif 'dividends paid' in row_str and dividends is None:
                 dividends = float(cashflow.loc[row].dropna().values[0])
 
@@ -107,8 +107,8 @@ def calculate_intrinsic_value(ticker, cagr):
 
         capex = -abs(capex or 0)
         ddna = abs(ddna or 0)
-        maintenance_capex = capex if abs(capex) > abs(ddna) else -ddna
-        fcf = net_income + ddna - abs(maintenance_capex)
+        adjusted_cost = capex if abs(capex) > abs(ddna) else ddna
+        fcf = net_income + ddna - adjusted_cost
 
         discount_rate = 0.06
         cagr_rate = cagr / 100
@@ -131,31 +131,16 @@ def calculate_intrinsic_value(ticker, cagr):
         debt_to_equity = total_debt / equity if equity else None
         cash_to_debt = cash / total_debt if total_debt else None
 
-        debug = {
-            "Net Income": net_income,
-            "D&A": ddna,
-            "CAPEX": capex,
-            "Maintenance CAPEX": maintenance_capex,
-            "Owner Earnings (FCF)": fcf,
-            "Shares Outstanding": shares_outstanding,
-            "Total Debt": total_debt,
-            "Cash": cash,
-            "Discounted FCFs": discounted_fcfs,
-            "Discounted Terminal": discounted_terminal,
-            "Pre-Margin Value": sum(discounted_fcfs) + discounted_terminal + (cash or 0) - total_debt,
-        }
-
-        return caesar_value, caesar_value_per_share, roe, roic, sgr, retained_rate, price, preferred_stock, treasury_stock, debt_to_equity, cash_to_debt, market_cap, dividends_per_share, None, debug
+        return caesar_value, caesar_value_per_share, roe, roic, sgr, retained_rate, price, preferred_stock, treasury_stock, debt_to_equity, cash_to_debt, market_cap, dividends_per_share, None
 
     except Exception as e:
         return [None]*15 + [str(e)]
 
 results = calculate_intrinsic_value(ticker, cagr)
 
-if isinstance(results[-1], str):
+if results[-1]:
     st.error(results[-1])
 else:
-    debug_info = results[-1]
     labels = ["Caesar Value", "Caesar Value per Share", "ROE", "ROIC", "SGR", "Retained Earnings %", "Price", "Preferred Stock", "Treasury Stock", "Debt to Equity", "Cash to Debt", "Market Cap", "Dividends per Share"]
     df = pd.DataFrame([[results[i] for i in range(len(labels))]], columns=labels).T
     df.columns = ["Value"]
@@ -163,10 +148,6 @@ else:
 
     df["Formatted"] = [format_value(val, idx) for val, idx in zip(df["Value"], df.index)]
     st.dataframe(df[["Formatted"]], use_container_width=True)
-
-    st.markdown("### Debug Values")
-    for key, value in debug_info.items():
-        st.write(f"**{key}**: {value}")
 
     current_price = results[6]
     caesar_value_per_share = results[1]
