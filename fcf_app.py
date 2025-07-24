@@ -107,8 +107,8 @@ def calculate_intrinsic_value(ticker, cagr):
 
         capex = -abs(capex or 0)
         ddna = abs(ddna or 0)
-        adjusted_cost = capex if abs(capex) > abs(ddna) else ddna
-        fcf = net_income - adjusted_cost
+        adjusted_cost = max(abs(capex), abs(ddna))
+        fcf = net_income - adjusted_cost if net_income > adjusted_cost else net_income * 0.3
 
         discount_rate = 0.06
         cagr_rate = cagr / 100
