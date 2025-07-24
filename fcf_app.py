@@ -81,8 +81,8 @@ def calculate_intrinsic_value(ticker, cagr):
             row_str = str(row).lower()
             if 'capital expend' in row_str and capex is None:
                 capex = float(cashflow.loc[row].dropna().values[0])
-            elif ddna is None and ('depreciation and amortization' in row_str or 'dep&amor' in row_str):
-                ddna = float(cashflow.loc[row].dropna().values[0])
+            elif any(term in row_str for term in ['depreciation', 'amortization', 'depletion']):
+                ddna = (ddna or 0) + float(cashflow.loc[row].dropna().values[0])
             elif 'dividends paid' in row_str and dividends is None:
                 dividends = float(cashflow.loc[row].dropna().values[0])
 
@@ -107,8 +107,26 @@ def calculate_intrinsic_value(ticker, cagr):
 
         capex = -abs(capex or 0)
         ddna = abs(ddna or 0)
-        adjusted_cost = capex if abs(capex) > abs(ddna) else ddna
-        fcf = net_income + ddna - adjusted_cost
+
+        maintenance_capex = capex if abs(capex) > abs(ddna) else -ddna
+        fcf = net_income + ddna - abs(maintenance_capex)
+
+        # Debug output
+        st.subheader("🔍 Debug Info")
+        st.write("Net Income:", net_income)
+        st.write("CAPEX:", capex)
+        st.write("D&A:", ddna)
+        st.write("Maintenance CAPEX Used:", maintenance_capex)
+        st.write("Free Cash Flow (Owner Earnings):", fcf)
+        st.write("Shares Outstanding:", shares_outstanding)
+        st.write("Total Debt:", (lt_debt or 0) + (st_debt or 0))
+        st.write("Cash:", cash)
+        st.write("Equity:", equity)
+        st.write("Dividends:", dividends)
+        st.write("Leases:", leases)
+        st.write("Minority Interest:", minority_interest)
+        st.write("Preferred Stock:", preferred_stock)
+        st.write("Treasury Stock:", treasury_stock)
 
         discount_rate = 0.06
         cagr_rate = cagr / 100
