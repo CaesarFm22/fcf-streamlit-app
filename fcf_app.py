@@ -77,13 +77,14 @@ def calculate_intrinsic_value(ticker, cagr):
             if 'net income' in row_str and net_income is None:
                 net_income = float(financials.loc[row].dropna().values[0])
 
+        capex = 0
         for row in cashflow.index:
             row_str = str(row).lower()
-            if 'capital expend' in row_str and capex is None:
-                capex = float(cashflow.loc[row].dropna().values[0])
+            if 'capital expend' in row_str or 'purchase of property' in row_str or 'additions to property' in row_str:
+                val = float(cashflow.loc[row].dropna().values[0])
+                capex += val
             elif any(term in row_str for term in ['depreciation', 'amortization', 'depletion']):
-                if 'ttm' not in row_str:  # exclude TTM totals
-                    ddna = (ddna or 0) + float(cashflow.loc[row].dropna().values[0])
+                ddna = (ddna or 0) + float(cashflow.loc[row].dropna().values[0])
             elif 'dividends paid' in row_str and dividends is None:
                 dividends = float(cashflow.loc[row].dropna().values[0])
 
@@ -115,10 +116,10 @@ def calculate_intrinsic_value(ticker, cagr):
         # Debug output
         st.subheader("🔍 Debug Info")
         st.write("Net Income:", net_income)
-        st.write("CAPEX:", capex)
+        st.write("CAPEX (sum of all relevant rows):", capex)
         st.write("D&A:", ddna)
         st.write("Maintenance CAPEX Used:", maintenance_capex)
-        st.write("Free Cash Flow (Owner Earnings): Net Income + D&A - Maintenance CAPEX =", net_income, "+", ddna, "-", abs(maintenance_capex), "=", fcf)
+        st.write("Free Cash Flow (Owner Earnings):", fcf)
         st.write("Shares Outstanding:", shares_outstanding)
         st.write("Total Debt:", (lt_debt or 0) + (st_debt or 0))
         st.write("Cash:", cash)
