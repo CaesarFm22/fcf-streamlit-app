@@ -83,8 +83,8 @@ def calculate_intrinsic_value(ticker, cagr):
             if 'capital expend' in row_str or 'purchase of property' in row_str or 'additions to property' in row_str:
                 val = float(cashflow.loc[row].dropna().values[0])
                 capex += val
-            elif any(term in row_str for term in ['depreciation', 'amortization', 'depletion']):
-                ddna = (ddna or 0) + float(cashflow.loc[row].dropna().values[0])
+            elif any(term in row_str for term in ['depreciation', 'amortization', 'depletion']) and ddna is None:
+                ddna = float(cashflow.loc[row].iloc[0])
             elif 'dividends paid' in row_str and dividends is None:
                 dividends = float(cashflow.loc[row].dropna().values[0])
 
