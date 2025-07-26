@@ -93,9 +93,9 @@ def calculate_intrinsic_value(ticker, cagr):
             row_str = str(row).lower()
             if 'stockholder' in row_str and 'equity' in row_str and equity is None:
                 equity = float(balance_sheet.loc[row].dropna().values[0])
-            elif 'long term debt' in row_str and lt_debt is None:
+            elif row_str == 'long term debt' and lt_debt is None:
                 lt_debt = float(balance_sheet.loc[row].dropna().values[0])
-            elif 'short term debt' in row_str and st_debt is None:
+            elif row_str == 'short long term debt' and st_debt is None:
                 st_debt = float(balance_sheet.loc[row].dropna().values[0])
             elif 'cash and cash' in row_str and cash is None:
                 cash = float(balance_sheet.loc[row].dropna().values[0])
