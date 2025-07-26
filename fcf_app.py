@@ -126,7 +126,37 @@ def calculate_intrinsic_value(ticker, cagr):
 
         caesar_value_per_share = caesar_value / shares_outstanding if shares_outstanding else None
 
-        
+        # Debug output
+        st.subheader("🔍 Debug Info")
+        st.write("Net Income:", net_income)
+        st.write("CAPEX (sum of all relevant rows):", capex)
+        st.write("D&A:", ddna)
+        st.write("Maintenance CAPEX Used:", maintenance_capex)
+        st.write("Free Cash Flow (Owner Earnings):", fcf)
+        st.write("Calculation Breakdown:")
+        st.write(f"FCF = Net Income ({net_income}) + D&A ({ddna}) - |Maintenance CapEx ({maintenance_capex})|")
+        st.write("Shares Outstanding:", shares_outstanding)
+        st.write("Total Debt:", total_debt)
+        st.write("Cash:", cash)
+        st.write("Equity:", equity)
+        st.write("Dividends:", dividends)
+        st.write("Leases:", leases)
+        st.write("Minority Interest:", minority_interest)
+        st.write("Preferred Stock:", preferred_stock)
+        st.write("Treasury Stock:", treasury_stock)
+        st.subheader("📊 Valuation Calculation Breakdown")
+        st.write(f"Discount Rate: {discount_rate}")
+        st.write(f"CAGR: {cagr_rate}")
+        st.write("Discounted FCFs (Years 1-10):", discounted_fcfs)
+        st.write("Sum of Discounted FCFs:", sum(discounted_fcfs))
+        st.write("Terminal Value (9 × FCF):", terminal_value)
+        st.write("Discounted Terminal Value:", discounted_terminal)
+        st.write("Cash added:", cash or 0)
+        st.write("Total Debt subtracted:", total_debt)
+        st.write("Caesar Value before margin of safety:", sum(discounted_fcfs) + discounted_terminal + (cash or 0) - total_debt)
+        st.write("Caesar Value after 30% margin of safety:", caesar_value)
+        st.write("Shares Outstanding:", shares_outstanding)
+        st.write("Caesar Value per Share:", caesar_value_per_share)
 
         roe = fcf / equity if equity else None
         invested_capital = (equity or 0) + (lt_debt or 0) + (st_debt or 0) + (leases or 0) + (minority_interest or 0) - (cash or 0)
