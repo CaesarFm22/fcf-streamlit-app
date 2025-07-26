@@ -120,6 +120,8 @@ def calculate_intrinsic_value(ticker, cagr):
         st.write("D&A:", ddna)
         st.write("Maintenance CAPEX Used:", maintenance_capex)
         st.write("Free Cash Flow (Owner Earnings):", fcf)
+        st.write("Calculation Breakdown:")
+        st.write(f"FCF = Net Income ({net_income}) + D&A ({ddna}) - |Maintenance CapEx ({maintenance_capex})|")
         st.write("Shares Outstanding:", shares_outstanding)
         st.write("Total Debt:", (lt_debt or 0) + (st_debt or 0))
         st.write("Cash:", cash)
@@ -129,7 +131,20 @@ def calculate_intrinsic_value(ticker, cagr):
         st.write("Minority Interest:", minority_interest)
         st.write("Preferred Stock:", preferred_stock)
         st.write("Treasury Stock:", treasury_stock)
-
+        st.subheader("📊 Valuation Calculation Breakdown")
+        st.write(f"Discount Rate: {discount_rate}")
+        st.write(f"CAGR: {cagr_rate}")
+        st.write("Discounted FCFs (Years 1-10):", discounted_fcfs)
+        st.write("Sum of Discounted FCFs:", sum(discounted_fcfs))
+        st.write("Terminal Value (9 × FCF):", terminal_value)
+        st.write("Discounted Terminal Value:", discounted_terminal)
+        st.write("Cash added:", cash or 0)
+        st.write("Total Debt subtracted:", total_debt)
+        st.write("Caesar Value before margin of safety:", sum(discounted_fcfs) + discounted_terminal + (cash or 0) - total_debt)
+        st.write("Caesar Value after 30% margin of safety:", caesar_value)
+        st.write("Shares Outstanding:", shares_outstanding)
+        st.write("Caesar Value per Share:", caesar_value_per_share)
+        
         discount_rate = 0.06
         cagr_rate = cagr / 100
         discounted_fcfs = [fcf * ((1 + cagr_rate) ** i) / ((1 + discount_rate) ** i) for i in range(1, 11)]
