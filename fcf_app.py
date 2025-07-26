@@ -80,10 +80,10 @@ def calculate_intrinsic_value(ticker, cagr):
         capex_rows = []
         for row in cashflow.index:
             row_str = str(row).lower()
-            if any(term in row_str for term in ['capital expend', 'purchase of property', 'additions to property']):
+            if 'capital expenditure' == row_str:
                 val = float(cashflow.loc[row].dropna().values[0])
                 capex_rows.append((row, val))
-                capex = (capex or 0) + val
+                capex = val
             elif any(term in row_str for term in ['depreciation', 'amortization', 'depletion']) and ddna is None:
                 ddna = float(cashflow.loc[row].iloc[0])
             elif 'dividends paid' in row_str and dividends is None:
@@ -131,7 +131,7 @@ def calculate_intrinsic_value(ticker, cagr):
         st.subheader("🔍 Debug Info")
         st.write("Net Income:", net_income)
         st.write("CAPEX rows used:", capex_rows)
-        st.write("CAPEX (sum of all relevant rows):", capex)
+        st.write("CAPEX (only 'Capital Expenditure' row):", capex)
         st.write("D&A:", ddna)
         st.write("Maintenance CAPEX Used:", maintenance_capex)
         st.write("Free Cash Flow (Owner Earnings):", fcf)
