@@ -113,6 +113,19 @@ def calculate_intrinsic_value(ticker, cagr):
         maintenance_capex = capex if abs(capex) > abs(ddna) else -ddna
         fcf = net_income + ddna - abs(maintenance_capex)
 
+        discount_rate = 0.06
+        cagr_rate = cagr / 100
+        discounted_fcfs = [fcf * ((1 + cagr_rate) ** i) / ((1 + discount_rate) ** i) for i in range(1, 11)]
+
+        terminal_value = 9 * fcf
+        discounted_terminal = terminal_value / ((1 + discount_rate) ** 10)
+
+        total_debt = (lt_debt or 0) + (st_debt or 0)
+        caesar_value = sum(discounted_fcfs) + discounted_terminal + (cash or 0) - total_debt
+        caesar_value *= 0.70
+
+        caesar_value_per_share = caesar_value / shares_outstanding if shares_outstanding else None
+
         # Debug output
         st.subheader("🔍 Debug Info")
         st.write("Net Income:", net_income)
@@ -123,7 +136,7 @@ def calculate_intrinsic_value(ticker, cagr):
         st.write("Calculation Breakdown:")
         st.write(f"FCF = Net Income ({net_income}) + D&A ({ddna}) - |Maintenance CapEx ({maintenance_capex})|")
         st.write("Shares Outstanding:", shares_outstanding)
-        st.write("Total Debt:", (lt_debt or 0) + (st_debt or 0))
+        st.write("Total Debt:", total_debt)
         st.write("Cash:", cash)
         st.write("Equity:", equity)
         st.write("Dividends:", dividends)
@@ -144,19 +157,7 @@ def calculate_intrinsic_value(ticker, cagr):
         st.write("Caesar Value after 30% margin of safety:", caesar_value)
         st.write("Shares Outstanding:", shares_outstanding)
         st.write("Caesar Value per Share:", caesar_value_per_share)
-        
-        discount_rate = 0.06
-        cagr_rate = cagr / 100
-        discounted_fcfs = [fcf * ((1 + cagr_rate) ** i) / ((1 + discount_rate) ** i) for i in range(1, 11)]
 
-        terminal_value = 9 * fcf
-        discounted_terminal = terminal_value / ((1 + discount_rate) ** 10)
-
-        total_debt = (lt_debt or 0) + (st_debt or 0)
-        caesar_value = sum(discounted_fcfs) + discounted_terminal + (cash or 0) - total_debt
-        caesar_value *= 0.70
-
-        caesar_value_per_share = caesar_value / shares_outstanding if shares_outstanding else None
         roe = fcf / equity if equity else None
         invested_capital = (equity or 0) + (lt_debt or 0) + (st_debt or 0) + (leases or 0) + (minority_interest or 0) - (cash or 0)
         retained_earnings = fcf - (dividends if dividends and dividends < 0 else 0)
