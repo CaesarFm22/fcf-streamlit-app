@@ -80,7 +80,7 @@ def calculate_intrinsic_value(ticker, cagr):
         capex_rows = []
         for row in cashflow.index:
             row_str = str(row).lower()
-            if 'capital expenditure' == row_str:
+            if row_str == 'capital expenditure':
                 val = float(cashflow.loc[row].dropna().values[0])
                 capex_rows.append((row, val))
                 capex = val
@@ -95,7 +95,7 @@ def calculate_intrinsic_value(ticker, cagr):
                 equity = float(balance_sheet.loc[row].dropna().values[0])
             elif 'long term debt' in row_str and lt_debt is None:
                 lt_debt = float(balance_sheet.loc[row].dropna().values[0])
-            elif 'short long term debt' in row_str and st_debt is None:
+            elif 'short term debt' in row_str and st_debt is None:
                 st_debt = float(balance_sheet.loc[row].dropna().values[0])
             elif 'cash and cash' in row_str and cash is None:
                 cash = float(balance_sheet.loc[row].dropna().values[0])
@@ -138,6 +138,8 @@ def calculate_intrinsic_value(ticker, cagr):
         st.write("Calculation Breakdown:")
         st.write(f"FCF = Net Income ({net_income}) + D&A ({ddna}) - |Maintenance CapEx ({maintenance_capex})|")
         st.write("Shares Outstanding:", shares_outstanding)
+        st.write("Long Term Debt:", lt_debt)
+        st.write("Short Term Debt:", st_debt)
         st.write("Total Debt:", total_debt)
         st.write("Cash:", cash)
         st.write("Equity:", equity)
